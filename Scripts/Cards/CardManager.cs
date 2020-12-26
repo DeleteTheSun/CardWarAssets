@@ -12,7 +12,6 @@ namespace Cards
         private GameObject DeckParent, CardPrefab;
         public List<CardData> Deck;
         public Sprite BackTexture;
-        public CardTweening CardTweening;
         #region Editor
         /// <summary>
         /// struct in order to make it easier to create all the card objects.
@@ -57,13 +56,7 @@ namespace Cards
             Deck.Clear();
             foreach (ValueFacePair pair in ValueFacePairs)
             {
-                GameObject card = Instantiate(CardPrefab, DeckParent.transform);
-                card.name = pair.Type.ToString() + " " + pair.Value.ToString();
-                CardData cardData = card.GetComponent<CardData>();
-                cardData.FillData(pair);
-                cardData.Image.sprite = BackTexture;
-
-                Deck.Add(cardData);
+                Deck.Add(new CardData(pair));
             }
         }
         #endregion

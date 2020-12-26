@@ -8,12 +8,19 @@ namespace War
 {
     public class WarPlayer : MonoBehaviour
     {
-        public static int TimeToWaitForCard = 1;
+        public static int TimeToWaitForCard = 10;
         public string Name;
         public Transform PoolTransform;
         public bool IsPlayer;
-        public Vector3 NextCardPosition { get; set; }
+        public TweenableCard MyCard;
+        public GameObject DeckObj;
+        //public Vector3 NextCardPosition { get; set; }
         public Queue<CardData> Deck { get; set; } = new Queue<CardData>();
+
+        private void Start()
+        {
+            DeckObj.transform.position = transform.position;
+        }
         /// <summary>
         /// Trys to deque card into out parameter, will return whether it succeeded or not
         /// </summary>
@@ -25,9 +32,8 @@ namespace War
             if(Deck.Count > 0)
             {
                 cardData = Deck.Dequeue();
-                cardData.transform.SetAsLastSibling();
-                //Places it in the bottom of the hiearchy so it would be sorted first, appearing as if the first in the card pile.
-                cardData.PlaceCard(PoolTransform.position, TimeToWaitForCard, faceDown, !IsPlayer);
+                MyCard.CardData = cardData;
+                PlayMoveToArena();
                 return true; 
             }
             else
@@ -45,17 +51,78 @@ namespace War
         {
             while (pool.Count > 0)
             {
-                EnqueueCard(pool.Dequeue(), TimeToWaitForCard);
+                EnqueueCard(pool.Dequeue());
             }
         }
 
-        public void EnqueueCard(CardData Card, float time)
+        public void EnqueueCard(CardData Card, bool quick = false)
         {
-            Card.PlaceCard(transform.position, time, true, !IsPlayer);
-            //Places it in the top of the hiearchy so it would be sorted last, appearing as if it's below all the other cards.
-            Card.transform.SetAsFirstSibling();
+            if (quick)
+            {
+                PlayDistribute();
+            }
+            else
+            {
+                PlayMoveToDeck();
+            }
             Deck.Enqueue(Card);
+            DeckObj.SetActive(true);
+        }
+        public void PlayFlipCard()
+        {
+            if (MyCard.FlipCard.playedOnce)
+            {
+                MyCard.FlipCard.Restart();
+            }
+            else
+            {
+                MyCard.FlipCard.Play();
+            }
         }
 
+        public void PlayMoveToDeck()
+        {
+            if (MyCard.MoveToDeck.playedOnce)
+            {
+                MyCard.MoveToDeck.Restart();
+            }
+            else
+            {
+                MyCard.MoveToDeck.Play();
+            }
+        }
+        public void PlayMoveToArena()
+        {
+            if (MyCard.MoveToArena.playedOnce)
+            {
+                MyCard.MoveToArena.Restart();
+            }
+            else
+            {
+                MyCard.MoveToArena.Play();
+            }
+        }
+        public void PlayMoveToOpponent()
+        {
+            if (MyCard.MoveToOpponent.playedOnce)
+            {
+                MyCard.MoveToOpponent.Restart();
+            }
+            else
+            {
+                MyCard.MoveToOpponent.Play();
+            }
+        }
+        public void PlayDistribute()
+        {
+            if (MyCard.Distribute.playedOnce)
+            {
+                MyCard.Distribute.Restart();
+            }
+            else
+            {
+                MyCard.Distribute.Play();
+            }
+        }
     } 
 }
