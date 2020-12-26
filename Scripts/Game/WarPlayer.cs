@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cards;
 using DG.Tweening;
+using TMPro;
 
 namespace War
 {
     public class WarPlayer : MonoBehaviour
     {
-        public static int TimeToWaitForCard = 10;
+        public static int TimeToWaitForCard = 1;
         public string Name;
         public Transform PoolTransform;
         public bool IsPlayer;
         public TweenableCard MyCard;
         public GameObject DeckObj;
+        public TextMeshProUGUI Text;
         //public Vector3 NextCardPosition { get; set; }
         public Queue<CardData> Deck { get; set; } = new Queue<CardData>();
 
@@ -27,13 +29,24 @@ namespace War
         /// <param name="cardData">out parameter</param>
         /// <param name="faceDown"></param>
         /// <returns></returns>
-        public bool TryPlayCard(out CardData cardData, bool faceDown = false)
+        public bool TryPlayCard(out CardData cardData, bool War = false)
         {
             if(Deck.Count > 0)
             {
                 cardData = Deck.Dequeue();
                 MyCard.CardData = cardData;
-                PlayMoveToArena();
+                MyCard.transform.SetAsLastSibling();
+                if (!War)
+                {
+                    PlayMoveToArena();
+                }
+                else
+                {
+                    MyCard.SwitchCardFace(true);
+                    MyCard.transform.position = transform.position;
+                    PlayWar();
+                }
+                Text.text = Deck.Count.ToString();
                 return true; 
             }
             else
@@ -57,6 +70,7 @@ namespace War
 
         public void EnqueueCard(CardData Card, bool quick = false)
         {
+            MyCard.transform.SetAsFirstSibling();
             if (quick)
             {
                 PlayDistribute();
@@ -66,7 +80,8 @@ namespace War
                 PlayMoveToDeck();
             }
             Deck.Enqueue(Card);
-            DeckObj.SetActive(true);
+            Text.text = Deck.Count.ToString();
+            DeckObj.SetActive(Deck.Count>0);
         }
         public void PlayFlipCard()
         {
@@ -112,6 +127,7 @@ namespace War
             {
                 MyCard.MoveToOpponent.Play();
             }
+            MyCard.transform.SetAsFirstSibling();
         }
         public void PlayDistribute()
         {
@@ -122,6 +138,17 @@ namespace War
             else
             {
                 MyCard.Distribute.Play();
+            }
+        }
+        public void PlayWar()
+        {
+            if (MyCard.War.playedOnce)
+            {
+                MyCard.War.Restart();
+            }
+            else
+            {
+                MyCard.War.Play();
             }
         }
     } 

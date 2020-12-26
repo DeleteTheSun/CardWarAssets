@@ -8,8 +8,7 @@ namespace Cards
 {
     public class CardManager : Singleton<CardManager>
     {
-        [SerializeField]
-        private GameObject DeckParent, CardPrefab;
+        public GameObject DeckPlaceHolder;
         public List<CardData> Deck;
         public Sprite BackTexture;
         #region Editor

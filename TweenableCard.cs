@@ -13,39 +13,41 @@ namespace Cards
         public Image Image;
         public GameObject Deck;
         public WarPlayer Player, Opponent;
-        public Sequence MoveToDeck, MoveToArena, MoveToOpponent, Distribute, FlipCard;
-        public float TimeToPlace = 1, TimeToGoToDeck = 0.2f;
+        public Sequence MoveToDeck, MoveToArena, MoveToOpponent, Distribute, FlipCard, War;
         private bool faceDown = true;
 
-        private void Start()
+        private void Awake()
         {
             MoveToDeck = DOTween.Sequence().SetAutoKill(false);
             MoveToDeck.Pause();
-            MoveToDeck.Append(transform.DOMove(Player.transform.position, TimeToPlace));//.OnComplete(ReturnToPosition);
+            MoveToDeck.Append(transform.DOMove(Player.transform.position, GameManager.instance.TimeToMoveCard));
+            MoveToDeck.Join(transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, 90, 0), GameManager.instance.TimeToMoveCard / 2).OnComplete(() => SwitchCardFace(true)));
+            MoveToDeck.Insert(GameManager.instance.TimeToMoveCard / 2, transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, 0, 0), GameManager.instance.TimeToMoveCard / 2));
 
             MoveToOpponent = DOTween.Sequence().SetAutoKill(false);
             MoveToOpponent.Pause();
-            MoveToOpponent.Append(transform.DOMove(Opponent.transform.position, TimeToPlace));//.OnComplete(ReturnToPosition);
-            MoveToOpponent.Join(transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, 90, 90), TimeToPlace / 2).OnComplete(SwitchCardFace));
-            MoveToOpponent.AppendInterval(TimeToPlace / 2);
-            MoveToOpponent.Append(transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, -90, 90), TimeToPlace / 2));
+            MoveToOpponent.Append(transform.DOMove(Opponent.transform.position, GameManager.instance.TimeToMoveCard));//.OnComplete(ReturnToPosition);
+            MoveToOpponent.Join(transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, 90, 90), GameManager.instance.TimeToMoveCard / 2).OnComplete(() => SwitchCardFace(true)));
+            MoveToOpponent.Insert(GameManager.instance.TimeToMoveCard / 2, transform.DORotate(transform.rotation.eulerAngles + new Vector3(0, 0, 180), GameManager.instance.TimeToMoveCard / 2));
 
             MoveToArena = DOTween.Sequence().SetAutoKill(false);
             MoveToArena.Pause();
-            MoveToArena.Append(transform.DOMove(Player.PoolTransform.position, TimeToPlace));
-            MoveToArena.Join(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * 90, TimeToPlace / 2).OnComplete(SwitchCardFace));
-            MoveToArena.AppendInterval(TimeToPlace / 2);
-            MoveToArena.Append(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * -90, TimeToPlace / 2));
+            MoveToArena.Append(transform.DOMove(Player.PoolTransform.position, GameManager.instance.TimeToMoveCard));
+            MoveToArena.Join(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * 90, GameManager.instance.TimeToMoveCard / 2).OnComplete(() => SwitchCardFace(false)));
+            MoveToArena.Insert(GameManager.instance.TimeToMoveCard / 2, transform.DORotate(transform.rotation.eulerAngles, GameManager.instance.TimeToMoveCard / 2));
 
             Distribute = DOTween.Sequence().SetAutoKill(false);
             Distribute.Pause();
-            Distribute.Append(transform.DOMove(Player.transform.position, TimeToGoToDeck));//.SetLoops(CardManager.instance.Deck.Count/2, LoopType.Restart));
+            Distribute.Append(transform.DOMove(Player.transform.position, GameManager.instance.TimeToDistributeCard));//.SetLoops(CardManager.instance.Deck.Count/2, LoopType.Restart));
 
             FlipCard = DOTween.Sequence().SetAutoKill(false);
             FlipCard.Pause();
-            FlipCard.Append(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * 90, TimeToPlace / 2).OnComplete(SwitchCardFace));
-            FlipCard.AppendInterval(TimeToPlace / 2);
-            FlipCard.Append(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * -90, TimeToPlace / 2));
+            FlipCard.Append(transform.DORotate(transform.rotation.eulerAngles + Vector3.up * 90, GameManager.instance.TimeToMoveCard / 2).OnComplete(() => SwitchCardFace(false)));
+            FlipCard.Insert(GameManager.instance.TimeToMoveCard / 2, transform.DORotate(transform.rotation.eulerAngles, GameManager.instance.TimeToMoveCard / 2));
+
+            War = DOTween.Sequence().SetAutoKill(false);
+            War.Pause();
+            War.Append(transform.DOMove(Player.PoolTransform.position, GameManager.instance.TimeToMoveCard));
         }
 
         #region old
@@ -97,10 +99,13 @@ namespace Cards
         /// <summary>
         /// switches between card faces.
         /// </summary>
-        public void SwitchCardFace()
+        public void SwitchCardFace(bool turnFaceDown)
         {
-            faceDown = !faceDown;
-            Image.sprite = CardData.FrontImage;
+            if(faceDown != turnFaceDown)
+            {
+                faceDown = turnFaceDown;
+                Image.sprite = faceDown ? CardManager.instance.BackTexture : CardData.FrontImage;
+            }
         }
 
         public void ReturnToPosition()
