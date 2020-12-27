@@ -51,7 +51,7 @@ namespace War
                 counter++;
             }
             CanPlay = true;
-            Text.text = "Play";
+            Text.text = "Left click in order to play";
             CardManager.DeckPlaceHolder.SetActive(false);
         }
 
